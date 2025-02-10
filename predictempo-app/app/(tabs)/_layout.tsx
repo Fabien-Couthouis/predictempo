@@ -40,6 +40,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="red_days_prediction"
+        options={{
+          title: 'Red Days',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="cloud.fill" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
