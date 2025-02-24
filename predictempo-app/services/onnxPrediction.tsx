@@ -1,5 +1,6 @@
 import { InferenceSession, Tensor } from 'onnxruntime-react-native';
 import { Asset } from 'expo-asset';
+import { DailyWeatherData, retrieveWeather, FetchWeatherError } from './weatherForecastRetriever';
 
 class OnnxModelNotFoundError extends Error {
     constructor(message: string) {
@@ -27,6 +28,22 @@ const loadModelAssetAndCreateSession = async (modelRequire: string) => {
 
 const retrieveInputData = async (date: Date) => {
     const inputData = new Float32Array(20).fill(0);
+    const city = "Paris";
+    const weatherData = await retrieveWeather(city);
+    if (!weatherData) {
+        throw new FetchWeatherError(`Failed to fetch weather data for ${city}`);
+    }
+
+    // Display the data
+    for (let i = 0; i < weatherData.length; i++) {
+        console.log(
+            'Weather data',
+            city,
+            weatherData[i].time.toISOString(),
+            weatherData[i].temperature2mMax,
+            weatherData[i].temperature2mMin
+        );
+    }
     return inputData;
 }
 
