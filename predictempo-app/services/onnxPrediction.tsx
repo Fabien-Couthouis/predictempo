@@ -73,10 +73,10 @@ const retrieveInputData = async (nDaysToPredict: number, inputNames: readonly st
 
 // Cache object to store predictions
 const predictionCache: Record<string, boolean[]> = {};
-export const areRedDays = async (nDaysToPredict: number) => {
+
+export const areRedDays = async (nDaysToPredict: number): Promise<boolean[]> => {
     const cacheKey = nDaysToPredict.toString();
     if (predictionCache[cacheKey]) {
-        console.debug("Reading predictions from cache:");
         return predictionCache[cacheKey];
     }
 
@@ -107,6 +107,6 @@ export const areRedDays = async (nDaysToPredict: number) => {
         return areRedDay;
     } catch (error) {
         console.error("Error loading or running ONNX model:", error);
-        return false
+        return Array(nDaysToPredict).fill(false);
     }
 };
