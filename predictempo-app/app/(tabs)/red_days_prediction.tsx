@@ -1,9 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { areRedDays } from '../../services/onnxPrediction';
+import { TempoColor, retrieveTodayColor, retrieveTomorrowColor } from '../../services/redDaysRetriever';
 
+
+type DayData = {
+    name: string;
+    isToday: boolean;
+    date: Date;
+}
 const RedDaysWidget = () => {
-    const [redDays, setRedDays] = useState([]);
+    const [redDays, setRedDays] = useState<TempoColor[]>([]);
 
     // Get current day and calculate the previous, today, and next five days
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -17,7 +24,8 @@ const RedDaysWidget = () => {
         let days = [];
         for (let i = 0; i < nDaysToDisplay; i++) {
             let index = (currentDayIndex + i + nDaysInWeek) % nDaysInWeek;
-            days.push({ name: daysOfWeek[index], isToday: i === 0, date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + i) });
+            const dayData = { name: daysOfWeek[index], isToday: i === 0, date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + i) } as DayData;
+            days.push(dayData);
         }
         return days;
     };
@@ -26,12 +34,41 @@ const RedDaysWidget = () => {
 
     useEffect(() => {
         const checkRedDays = async () => {
-            const results = await areRedDays(nDaysToDisplay - 1);
-            setRedDays(results);
+            const nextDaysAreRedPreds = await areRedDays(nDaysToDisplay - 1);
+
+            const todayColor: TempoColor = await retrieveTodayColor();
+            let nextDaysColors = [todayColor];
+            for (let i = 0; i < nextDaysAreRedPreds.length; i++) {
+                nextDaysColors.push(nextDaysAreRedPreds[i] ? TempoColor.RED : TempoColor.BLUE_OR_WHITE);
+            }
+
+            const tomorrowColor: TempoColor = await retrieveTomorrowColor();
+            if (tomorrowColor !== TempoColor.UNKNOWN) {
+                nextDaysColors[1] = tomorrowColor;
+            }
+            setRedDays(nextDaysColors);
         };
 
         checkRedDays();
     }, [displayedDays]);
+
+    const getDaySquareStyle = (color: TempoColor, isToday: boolean) => {
+        let style;
+        switch (color) {
+            case TempoColor.RED:
+                style = styles.redDaySquare;
+                break;
+            case TempoColor.BLUE:
+                style = styles.blueDaySquare;
+                break;
+            case TempoColor.WHITE:
+                style = styles.whiteDaySquare;
+                break;
+            default:
+                style = styles.greenDaySquare; // Default to green for BLUE_OR_WHITE
+        }
+        return [style, isToday && styles.todayHighlight];
+    };
 
     return (
         <View style={styles.container}>
@@ -40,10 +77,7 @@ const RedDaysWidget = () => {
                 {displayedDays.map((day, index) => (
                     <View
                         key={index}
-                        style={[
-                            redDays[index] ? styles.redDaySquare : styles.greenDaySquare,
-                            day.isToday && styles.todayHighlight // Highlight today's square with shadow/light effects
-                        ]}
+                        style={getDaySquareStyle(redDays[index], day.isToday)}
                     >
                         <Text style={styles.dayText}>{day.name}</Text>
                     </View>
@@ -88,6 +122,36 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
+    blueDaySquare: {
+        backgroundColor: '#2196F3',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: 5,
+        width: 100,
+        height: 100,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    whiteDaySquare: {
+        backgroundColor: '#FFFFFF',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: 5,
+        width: 100,
+        height: 100,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
     redDaySquare: {
         backgroundColor: '#D11B2B',
         padding: 20,
@@ -104,7 +168,7 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     todayHighlight: {
-        shadowColor: '#FFF700', // Golden glow
+        shadowColor: '#FFF700', // Golden glow de toute beautée
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.9,
         shadowRadius: 10,
@@ -112,7 +176,7 @@ const styles = StyleSheet.create({
     },
     dayText: {
         fontSize: 18,
-        color: '#fff',
+        color: '#000',
         fontWeight: 'bold',
         textAlign: 'center',
     },
