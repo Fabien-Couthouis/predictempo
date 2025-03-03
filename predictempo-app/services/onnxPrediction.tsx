@@ -1,6 +1,6 @@
 import { InferenceSession, Tensor } from 'onnxruntime-react-native';
 import { Asset } from 'expo-asset';
-import { DailyWeatherData, retrieveWeather, FetchWeatherError } from './weatherForecastRetriever';
+import { retrieveWeatherPredictions, FetchWeatherError } from './weatherForecastRetriever';
 
 class OnnxModelNotFoundError extends Error {
     constructor(message: string) {
@@ -20,55 +20,91 @@ const loadModelAssetAndCreateSession = async (modelRequire: string) => {
     const assets = await Asset.loadAsync(modelRequire);
     const modelUri = assets[0].localUri;
     if (!modelUri) {
-        throw new OnnxModelNotFoundError(`Failed to get model URI: ${assets[0]}`);
+        throw new OnnxModelNotFoundError(`Failed to get model at: ${assets[0]}`);
     }
 
     return InferenceSession.create(modelUri, { executionProviders: ['cpu'] });
 }
 
-const retrieveInputData = async (date: Date) => {
-    const inputData = new Float32Array(20).fill(0);
-    const city = "Paris";
-    const weatherData = await retrieveWeather(city);
-    if (!weatherData) {
-        throw new FetchWeatherError(`Failed to fetch weather data for ${city}`);
+const retrieveInputData = async (nDaysToPredict: number, inputNames: readonly string[]) => {
+    const cities = new Set<string>();
+    const inputData: Record<string, Number[]> = {};
+
+    inputNames.forEach((inputName) => {
+        if (inputName.startsWith('TN_') || inputName.startsWith('TX_')) {
+            cities.add(inputName.slice(3).toUpperCase());
+        }
+
+        inputData[inputName] = [];
+    });
+
+    console.log("Retrieving weather for cities:", cities);
+    const weatherPredictions = await retrieveWeatherPredictions(Array.from(cities), nDaysToPredict);
+    if (!weatherPredictions) {
+        throw new FetchWeatherError(`Failed to fetch weather data for ${cities}`);
     }
 
-    // Display the data
-    for (let i = 0; i < weatherData.length; i++) {
-        console.log(
-            'Weather data',
-            city,
-            weatherData[i].time.toISOString(),
-            weatherData[i].temperature2mMax,
-            weatherData[i].temperature2mMin
-        );
+    weatherPredictions.forEach(cityPrediction => {
+        cityPrediction.dailyPredictions.forEach(dailyPrediction => {
+            const tn = dailyPrediction.temperature2mMin;
+            const tx = dailyPrediction.temperature2mMax;
+
+            inputData[`TN_${cityPrediction.city}`].push(tn);
+            inputData[`TX_${cityPrediction.city}`].push(tx);
+        });
+    });
+
+    const today = new Date();
+    for (let i = 1; i <= nDaysToPredict; i++) {
+        const dayIdx = today.getDay() + i;
+        const isWeekDay = (dayIdx >= 1) && (dayIdx <= 5);
+
+        inputData[`is_week_day`].push(isWeekDay ? 1.0 : 0.0);
+        inputData[`last_day_was_red`].push(0.0); //TODO
     }
-    return inputData;
+
+    // Convert to tensor
+    const inputDataTensor: Record<string, Tensor> = {};
+    Object.keys(inputData).forEach((key) => {
+        inputDataTensor[key] = new Tensor("float32", inputData[key].map(Number), [inputData[key].length, 1]);
+    });
+    return inputDataTensor;
 }
 
-export const isRedDay = async (date: Date) => {
+// Cache object to store predictions
+const predictionCache: Record<string, boolean[]> = {};
+export const areRedDays = async (nDaysToPredict: number) => {
+    const cacheKey = nDaysToPredict.toString();
+    if (predictionCache[cacheKey]) {
+        console.debug("Reading predictions from cache:");
+        return predictionCache[cacheKey];
+    }
+
     try {
-        const modelRequire = require('../assets/neural_networks/lgbm_model_red_days_2025_02_21.onnx')
-        let session = await loadModelAssetAndCreateSession(modelRequire)
-        const inputData = await retrieveInputData(date);
+        const modelPath = '../assets/neural_networks/lgbm_model_red_days_2025_02_28.onnx';
+        let session = await loadModelAssetAndCreateSession(require(modelPath));
+        const inputData = await retrieveInputData(nDaysToPredict, session.inputNames);
 
         // Run inference
-        const feeds: Record<string, Tensor> = {};
-        feeds[session.inputNames[0]] = new Tensor(inputData, [1, inputData.length]);
-        const fetches: Record<string, Tensor> = await session.run(feeds);
+        const fetches: Record<string, Tensor> = await session.run(inputData);
 
         if (!session.outputNames.length) {
             throw new OnnxInferenceError("ONNX session has no output names.");
         }
 
-        const label = fetches[session.outputNames[0]].data[0];
-        console.log("Output data:", label);
-        if (typeof label !== 'bigint') {
-            throw new OnnxInferenceError("Output data is not a bigint.");
+        const areRedDay: boolean[] = [];
+        for (let i = 0; i < nDaysToPredict; i++) {
+            const label = fetches[session.outputNames[0]].data[i];
+            if (typeof label !== 'bigint') {
+                throw new OnnxInferenceError("Output data is not a bigint.");
+            }
+
+            areRedDay.push(Number(label) === 1);
         }
-        const isRedDay: Boolean = Number(label) === 1;
-        return isRedDay;
+
+        predictionCache[cacheKey] = areRedDay;
+        console.log("Are red days result:", areRedDay);
+        return areRedDay;
     } catch (error) {
         console.error("Error loading or running ONNX model:", error);
         return false
