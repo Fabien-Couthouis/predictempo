@@ -81,7 +81,7 @@ export const areRedDays = async (nDaysToPredict: number): Promise<boolean[]> => 
     }
 
     try {
-        const modelPath = '../assets/neural_networks/lgbm_model_red_days_2025_02_28.onnx';
+        const modelPath = '../assets/neural_networks/lgbm_model_red_days_2025_03_12.onnx';
         let session = await loadModelAssetAndCreateSession(require(modelPath));
         const inputData = await retrieveInputData(nDaysToPredict, session.inputNames);
 
