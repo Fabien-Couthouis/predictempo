@@ -13,7 +13,7 @@ const RedDaysWidget = () => {
     const [redDays, setRedDays] = useState<TempoColor[]>([]);
 
     // Get current day and calculate the previous, today, and next five days
-    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const daysOfWeek = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'jeudi', 'Vendredi', 'Samedi'];
     const today = new Date();
     const currentDayIndex = today.getDay();
     const nDaysToDisplay = 5;
@@ -24,7 +24,12 @@ const RedDaysWidget = () => {
         let days = [];
         for (let i = 0; i < nDaysToDisplay; i++) {
             let index = (currentDayIndex + i + nDaysInWeek) % nDaysInWeek;
-            const dayData = { name: daysOfWeek[index], isToday: i === 0, date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + i) } as DayData;
+            let name = daysOfWeek[index];
+            const isToday = i === 0;
+            if (isToday) {
+                name = "Aujourd'hui";
+            }
+            const dayData = { name: name, isToday: isToday, date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + i) } as DayData;
             days.push(dayData);
         }
         return days;
