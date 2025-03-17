@@ -1,5 +1,6 @@
-const TODAY_API_URL = "https://www.api-couleur-tempo.fr/api/jourTempo/today";
-const TOMORROW_API_URL = "https://www.api-couleur-tempo.fr/api/jourTempo/tomorrow";
+const API_URL = "https://www.api-couleur-tempo.fr/api/jourTempo/";
+const TODAY_API_URL = `${API_URL}today`;
+const TOMORROW_API_URL = `${API_URL}tomorrow`;
 
 export enum TempoColor {
     UNKNOWN = 0,
@@ -55,3 +56,32 @@ export const retrieveTomorrowColor = async (): Promise<TempoColor> => {
     const res = await retrieveColor(TOMORROW_API_URL);
     return res;
 };
+
+export const isThereOneRedDayLastWeek = async (currentDate: Date): Promise<boolean> => {
+    const day = currentDate.getDay();
+
+    // Calculate how many days to go back to reach last week's Monday
+    const daysToLastMonday = day === 0 ? 6 + 7 : day + 6; // If today is Sunday (0), go back 13 days
+
+    const lastMonday = new Date(currentDate);
+    lastMonday.setDate(currentDate.getDate() - daysToLastMonday);
+
+    const lastWeekDays: string[] = [];
+    for (let i = 0; i < 5; i++) {
+        const day = new Date(lastMonday);
+        day.setDate(lastMonday.getDate() + i);
+        lastWeekDays.push(day.toISOString().split('T')[0]); // Format as YYYY-MM-DD
+    }
+
+    console.debug('last week days:', lastWeekDays);
+
+    for (let i = 0; i < lastWeekDays.length; i++) {
+        const url = `${API_URL}${lastWeekDays[i]}`;
+        const color = await retrieveColor(url);
+        if (color === TempoColor.RED) {
+            return true;
+        }
+    }
+
+    return false;
+}

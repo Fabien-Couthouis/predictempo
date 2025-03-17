@@ -52,7 +52,9 @@ const cityNameToLatitudeLongitude: { [key: string]: Coordinate } = {
     "MONTPELLIER": new Coordinate(43.610769, 3.876716),
     "BREST": new Coordinate(48.390394, -4.486076),
     "NANCY": new Coordinate(48.692054, 6.184417),
-    "LILLE": new Coordinate(50.62925, 3.057256)
+    "LILLE": new Coordinate(50.62925, 3.057256),
+    "RENNES": new Coordinate(48.117266, -1.677792),
+    "TOULON": new Coordinate(43.124228, 5.928),
 }
 
 const processWeatherResponse = (responses: any, cities: readonly string[]) => {

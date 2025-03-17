@@ -1,6 +1,7 @@
 import { InferenceSession, Tensor } from 'onnxruntime-react-native';
 import { Asset } from 'expo-asset';
 import { retrieveWeatherPredictions, FetchWeatherError } from './weatherForecastRetriever';
+import { isThereOneRedDayLastWeek } from './redDaysRetriever';
 
 class OnnxModelNotFoundError extends Error {
     constructor(message: string) {
@@ -55,12 +56,18 @@ const retrieveInputData = async (nDaysToPredict: number, inputNames: readonly st
     });
 
     const today = new Date();
+    const redDaysLastWeek = await isThereOneRedDayLastWeek(today);
+    console.log("Red days last week:", redDaysLastWeek);
+
     for (let i = 1; i <= nDaysToPredict; i++) {
-        const dayIdx = today.getDay() + i;
+        const date = new Date(today);
+        date.setDate(date.getDate() + i);
+        const dayIdx = date.getDay();
+
         const isWeekDay = (dayIdx >= 1) && (dayIdx <= 5);
 
         inputData[`is_week_day`].push(isWeekDay ? 1.0 : 0.0);
-        inputData[`last_day_was_red`].push(0.0); //TODO
+        inputData[`red_days_last_week`].push(redDaysLastWeek ? 1.0 : 0.0);
     }
 
     // Convert to tensor
@@ -107,6 +114,9 @@ export const areRedDays = async (nDaysToPredict: number): Promise<boolean[]> => 
         return areRedDay;
     } catch (error) {
         console.error("Error loading or running ONNX model:", error);
-        return Array(nDaysToPredict).fill(false);
+        const defaultResult = Array(nDaysToPredict).fill(false);
+        // set in cache so we don't keep trying requesting the API
+        predictionCache[cacheKey] = defaultResult;
+        return defaultResult;
     }
 };
