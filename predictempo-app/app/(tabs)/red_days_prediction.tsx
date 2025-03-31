@@ -3,12 +3,12 @@ import { View, Text, StyleSheet } from 'react-native';
 import { areRedDays } from '../../services/onnxPrediction';
 import { TempoColor, retrieveTodayColor, retrieveTomorrowColor } from '../../services/redDaysRetriever';
 
-
 type DayData = {
     name: string;
     isToday: boolean;
     date: Date;
-}
+};
+
 const RedDaysWidget = () => {
     const [redDays, setRedDays] = useState<TempoColor[]>([]);
 
@@ -72,7 +72,7 @@ const RedDaysWidget = () => {
             default:
                 style = styles.greenDaySquare; // Default to green for BLUE_OR_WHITE
         }
-        return [style, isToday && styles.todayHighlight];
+        return [styles.daySquareBase, style, isToday && styles.todayHighlight];
     };
 
     return (
@@ -112,8 +112,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         gap: 10,
     },
-    greenDaySquare: {
-        backgroundColor: '#4CAF50',
+    daySquareBase: {
         padding: 20,
         borderRadius: 10,
         alignItems: 'center',
@@ -126,51 +125,18 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+    },
+    greenDaySquare: {
+        backgroundColor: '#4CAF50',
     },
     blueDaySquare: {
         backgroundColor: '#2196F3',
-        padding: 20,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: 5,
-        width: 100,
-        height: 100,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     whiteDaySquare: {
         backgroundColor: '#FFFFFF',
-        padding: 20,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: 5,
-        width: 100,
-        height: 100,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     redDaySquare: {
         backgroundColor: '#D11B2B',
-        padding: 20,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: 5,
-        width: 100,
-        height: 100,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     todayHighlight: {
         shadowColor: '#FFF700', // Golden glow de toute beautée
