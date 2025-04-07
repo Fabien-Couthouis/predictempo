@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image, useColorScheme } from 'react-native';
 import { areRedDays } from '../../services/onnxPrediction';
 import { TempoColor, retrieveTodayColor, retrieveTomorrowColor } from '../../services/redDaysRetriever';
 
@@ -11,9 +11,10 @@ type DayData = {
 
 const RedDaysWidget = () => {
     const [redDays, setRedDays] = useState<TempoColor[]>([]);
+    const colorScheme = useColorScheme(); // Get the current theme
 
     // Get current day and calculate the previous, today, and next five days
-    const daysOfWeek = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'jeudi', 'Vendredi', 'Samedi'];
+    const daysOfWeek = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
     const today = new Date();
     const currentDayIndex = today.getDay();
     const nDaysToDisplay = 5;
@@ -75,19 +76,24 @@ const RedDaysWidget = () => {
         return [styles.daySquareBase, style, isToday && styles.todayHighlight];
     };
 
+    const iconPath = require('../../assets/images/predictempo_icon_black.png'); // Path to your icon
+    const separatorStyle = colorScheme === 'dark' ? styles.separatorLineDark : styles.separatorLineLight;
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Les Jours Rouges</Text>
+            <Image source={iconPath} style={styles.topIcon} />
             <View style={styles.daysContainer}>
                 {displayedDays.map((day, index) => (
-                    <View
-                        key={index}
-                        style={getDaySquareStyle(redDays[index], day.isToday)}
-                    >
-                        <Text style={styles.dayText}>{day.name}</Text>
+                    <View key={index} style={styles.dayWrapper}>
+                        <View style={getDaySquareStyle(redDays[index], day.isToday)}>
+                            <Text style={styles.dayText}>{day.name}</Text>
+                        </View>
+                        {index < displayedDays.length - 1
+                            && <View style={[styles.separatorLineBase, separatorStyle]} />}
                     </View>
                 ))}
             </View>
+            <Image source={iconPath} style={styles.bottomIcon} />
         </View>
     );
 };
@@ -107,36 +113,39 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     daysContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
+        flexDirection: 'column',
+        alignItems: 'center',
         gap: 10,
     },
+    dayWrapper: {
+        alignItems: 'center',
+    },
     daySquareBase: {
-        padding: 20,
-        borderRadius: 10,
+        paddingVertical: 15,
+        paddingHorizontal: 50,
         alignItems: 'center',
         justifyContent: 'center',
-        margin: 5,
-        width: 100,
-        height: 100,
-        shadowColor: '#000',
+        marginBottom: 10,
+        height: 60,
+        width: 280,
+        borderRadius: 10, // Make corners rounded
+        shadowColor: 'black',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
     },
     greenDaySquare: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#8fe75f',
     },
     blueDaySquare: {
-        backgroundColor: '#2196F3',
+        backgroundColor: '#44d3ca',
     },
     whiteDaySquare: {
         backgroundColor: '#FFFFFF',
     },
     redDaySquare: {
-        backgroundColor: '#D11B2B',
+        backgroundColor: '#f42516',
     },
     todayHighlight: {
         shadowColor: '#FFF700', // Golden glow de toute beautée
@@ -145,11 +154,34 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 10,
     },
+    separatorLineBase: {
+        width: 120,
+        height: 1.5,
+        marginTop: 10,
+        marginBottom: 10,
+    },
+    separatorLineDark: {
+        backgroundColor: '#888', // Use a visible gray color for dark mode
+    },
+    separatorLineLight: {
+        backgroundColor: 'black', // Keep black for light mode
+    },
     dayText: {
         fontSize: 18,
-        color: '#000',
+        color: 'black',
         fontWeight: 'bold',
         textAlign: 'center',
+    },
+    topIcon: {
+        width: 150,
+        height: 50,
+        marginBottom: 30,
+    },
+    bottomIcon: {
+        width: 150,
+        height: 50,
+        marginTop: 30,
+        transform: [{ rotate: '180deg' }], // Flip the bottom icon
     },
 });
 
