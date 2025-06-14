@@ -170,5 +170,9 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# data folder (for now)
-data/
+# data files that can be downloaded from the download_meteo_data notebook
+data/rtt-vent
+data/SQR_*
+data/Liste_SQR_TX_metro.csv
+data/Liste_SQR_TN_metro.csv
+data/*.zip
