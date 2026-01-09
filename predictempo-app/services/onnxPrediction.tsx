@@ -68,6 +68,8 @@ const retrieveInputData = async (nDaysToPredict: number, inputNames: readonly st
 
         inputData[`is_week_day`].push(isWeekDay ? 1.0 : 0.0);
         inputData[`red_days_last_week`].push(redDaysLastWeek ? 1.0 : 0.0);
+        // warning: months are 0-indexed in JS, unlike in Pandas code used for training
+        inputData[`month`].push(date.getMonth() + 1.0); 
     }
 
     // Convert to tensor
