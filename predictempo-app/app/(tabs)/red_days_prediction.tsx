@@ -80,7 +80,7 @@ const RedDaysWidget = () => {
             default:
                 style = styles.greenDaySquare; // Default to green for BLUE_OR_WHITE
         }
-        return [styles.daySquareBase, style, isToday && styles.todayHighlight];
+        return [styles.daySquareBase, style, isToday];
     };
 
     const iconPath = require('../../assets/images/predictempo_icon_black.png'); // Path to your icon
@@ -106,7 +106,7 @@ const RedDaysWidget = () => {
                         >
                             {pressedIndex === index ? (
                                 <Text style={styles.dayText}>
-                                    {day.name}: {(probabilities[index] * 100).toFixed(2)}%
+                                    {day.name}: {(probabilities[index] * 100).toFixed(1)}%
                                 </Text>
                             ) : (
                                 <Text style={styles.dayText}>{day.name}</Text>
@@ -172,13 +172,6 @@ const styles = StyleSheet.create({
     },
     redDaySquare: {
         backgroundColor: '#f42516',
-    },
-    todayHighlight: {
-        shadowColor: '#FFF700', // Golden glow de toute beautée
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.9,
-        shadowRadius: 10,
-        elevation: 10,
     },
     separatorLineBase: {
         width: 120,
