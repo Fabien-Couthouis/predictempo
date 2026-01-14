@@ -80,10 +80,14 @@ const retrieveInputData = async (nDaysToPredict: number, inputNames: readonly st
     return inputDataTensor;
 }
 
-// Cache object to store predictions
-const predictionCache: Record<string, boolean[]> = {};
+interface Prediction {
+    label: boolean;
+    probability: number;
+}
 
-export const areRedDays = async (nDaysToPredict: number): Promise<boolean[]> => {
+// Cache object to store predictions
+const predictionCache: Record<string, Prediction[]> = {};
+export const areRedDays = async (nDaysToPredict: number): Promise<Prediction[]> => {
     const cacheKey = nDaysToPredict.toString();
     if (predictionCache[cacheKey]) {
         return predictionCache[cacheKey];
@@ -97,26 +101,36 @@ export const areRedDays = async (nDaysToPredict: number): Promise<boolean[]> => 
         // Run inference
         const fetches: Record<string, Tensor> = await session.run(inputData);
 
-        if (!session.outputNames.length) {
+        if (session.outputNames.length === 0) {
             throw new OnnxInferenceError("ONNX session has no output names.");
         }
+        console.log("ONNX output names:", session.outputNames);
+        console.log("ONNX outputs:", fetches[session.outputNames[1]].data);
 
-        const areRedDay: boolean[] = [];
+        const predictions: Prediction[] = [];
+        const labels = fetches[session.outputNames[0]].data;
+        // array of probabilities for each class (0 and 1), flattened
+        const probs = fetches[session.outputNames[1]].data;
         for (let i = 0; i < nDaysToPredict; i++) {
-            const label = fetches[session.outputNames[0]].data[i];
+            const label = labels[i];
+            const prob = probs[i * 2 + 1]; // probability of class 1 (red day)
             if (typeof label !== 'bigint') {
                 throw new OnnxInferenceError("Output data is not a bigint.");
             }
 
-            areRedDay.push(Number(label) === 1);
+            predictions.push({
+                label: Number(label) === 1,
+                probability: prob,
+            });
+            console.log(`Day ${i + 1}: label=${label}, prob=${prob}`);
         }
 
-        predictionCache[cacheKey] = areRedDay;
-        console.log("Are red days result:", areRedDay);
-        return areRedDay;
+        predictionCache[cacheKey] = predictions;
+        console.log("Predictions result:", predictions);
+        return predictions;
     } catch (error) {
         console.error("Error loading or running ONNX model:", error);
-        const defaultResult = Array(nDaysToPredict).fill(false);
+        const defaultResult: Prediction[] = Array(nDaysToPredict).fill({ label: false, probability: 0 });
         // set in cache so we don't keep trying requesting the API
         predictionCache[cacheKey] = defaultResult;
         return defaultResult;

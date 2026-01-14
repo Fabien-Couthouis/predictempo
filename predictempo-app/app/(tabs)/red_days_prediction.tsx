@@ -45,7 +45,8 @@ const RedDaysWidget = () => {
             const todayColor: TempoColor = await retrieveTodayColor();
             let nextDaysColors = [todayColor];
             for (let i = 0; i < nextDaysAreRedPreds.length; i++) {
-                nextDaysColors.push(nextDaysAreRedPreds[i] ? TempoColor.RED : TempoColor.BLUE_OR_WHITE);
+                const nextDayColor: TempoColor = nextDaysAreRedPreds[i].label ? TempoColor.RED : TempoColor.BLUE_OR_WHITE;
+                nextDaysColors.push(nextDayColor);
             }
 
             const tomorrowColor: TempoColor = await retrieveTomorrowColor();
