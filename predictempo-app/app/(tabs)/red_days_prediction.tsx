@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, useColorScheme } from 'react-native';
 import { areRedDays } from '../../services/onnxPrediction';
 import { TempoColor, retrieveTodayColor, retrieveTomorrowColor } from '../../services/redDaysRetriever';
 
@@ -11,7 +11,9 @@ type DayData = {
 
 const RedDaysWidget = () => {
     const [redDays, setRedDays] = useState<TempoColor[]>([]);
-    const colorScheme = useColorScheme(); // Get the current theme
+    const [probabilities, setProbabilities] = useState<number[]>([]); // State to hold probabilities
+    const [pressedIndex, setPressedIndex] = useState<number | null>(null);
+    const colorScheme = useColorScheme(); 
 
     // Get current day and calculate the previous, today, and next five days
     const daysOfWeek = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
@@ -44,9 +46,12 @@ const RedDaysWidget = () => {
 
             const todayColor: TempoColor = await retrieveTodayColor();
             let nextDaysColors = [todayColor];
+            let nextProbabilities = [todayColor === TempoColor.RED ? 1.0 : 0.0];
+
             for (let i = 0; i < nextDaysAreRedPreds.length; i++) {
                 const nextDayColor: TempoColor = nextDaysAreRedPreds[i].label ? TempoColor.RED : TempoColor.BLUE_OR_WHITE;
                 nextDaysColors.push(nextDayColor);
+                nextProbabilities.push(nextDaysAreRedPreds[i].probability);
             }
 
             const tomorrowColor: TempoColor = await retrieveTomorrowColor();
@@ -54,10 +59,11 @@ const RedDaysWidget = () => {
                 nextDaysColors[1] = tomorrowColor;
             }
             setRedDays(nextDaysColors);
+            setProbabilities(nextProbabilities); 
         };
 
         checkRedDays();
-    }, [displayedDays]);
+    }, []); // Note: Empty dependency array prevents unnecessary re-runs
 
     const getDaySquareStyle = (color: TempoColor, isToday: boolean) => {
         let style;
@@ -79,6 +85,10 @@ const RedDaysWidget = () => {
 
     const iconPath = require('../../assets/images/predictempo_icon_black.png'); // Path to your icon
     const separatorStyle = colorScheme === 'dark' ? styles.separatorLineDark : styles.separatorLineLight;
+    if (probabilities.length === 0 || probabilities.length !== redDays.length) {
+        return null; 
+    }
+
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Les Jours Rouges</Text>
@@ -86,11 +96,26 @@ const RedDaysWidget = () => {
             <View style={styles.daysContainer}>
                 {displayedDays.map((day, index) => (
                     <View key={index} style={styles.dayWrapper}>
-                        <View style={getDaySquareStyle(redDays[index], day.isToday)}>
-                            <Text style={styles.dayText}>{day.name}</Text>
-                        </View>
-                        {index < displayedDays.length - 1
-                            && <View style={[styles.separatorLineBase, separatorStyle]} />}
+                        <Pressable 
+                            onPressIn={() => setPressedIndex(index)} 
+                            onPressOut={() => setPressedIndex(null)}
+                            style={({ pressed }) => [
+                                getDaySquareStyle(redDays[index], day.isToday),
+                                pressed && { opacity: 0.8 } // Subtle visual feedback
+                            ]}
+                        >
+                            {pressedIndex === index ? (
+                                <Text style={styles.dayText}>
+                                    {day.name}: {(probabilities[index] * 100).toFixed(2)}%
+                                </Text>
+                            ) : (
+                                <Text style={styles.dayText}>{day.name}</Text>
+                            )}
+                        </Pressable>
+                        
+                        {index < displayedDays.length - 1 && (
+                            <View style={[styles.separatorLineBase, separatorStyle]} />
+                        )}
                     </View>
                 ))}
             </View>
