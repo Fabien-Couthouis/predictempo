@@ -1,45 +1,48 @@
-# Welcome to your Expo app 👋
+# Predictempo-app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Predictempo-app is an Expo-based mobile application that leverages **OpenMeteo** and **ONNX Runtime** to predict EDF's red days up to 5 days ahead using weather forecasts and models developed in the [modeling.ipynb](../notebooks/modeling.ipynb) notebook.
 
-## Get started
+---
 
-1. Install dependencies
+## Development setup
 
-   ```bash
-   npm install
-   ```
+For the best development experience, we recommend using a **Development Build**.
 
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### 1. Prerequisites & Installation
+Ensure you have Node.js installed, then install `yarn` and the project dependencies:
 
 ```bash
-npm run reset-project
+npm install -g yarn
+yarn install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Build Android app (.apk)
+### 2. Build the Development Client
+Generate the development APK for Android (one-time or when native modules change):
 
 ```bash
-eas build --platform android --profile preview 
+npx eas-cli build --platform android --profile development
 ```
+
+### 3. Install & Run
+1. Install the generated `.apk` on your Android device.
+2. Launch the development server in **development client** mode:
+
+```bash
+npx expo start --dev-client
+```
+
+Your app will stay synced with the code in the `predictempo-app` folder.
+
+---
+
+## Production Builds
+
+To generate a preview/production APK:
+
+```bash
+npx eas-cli build --platform android --profile production 
+```
+
 
 ## Learn more
 
