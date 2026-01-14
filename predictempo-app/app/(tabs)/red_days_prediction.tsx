@@ -44,19 +44,23 @@ const RedDaysWidget = () => {
         const checkRedDays = async () => {
             const nextDaysAreRedPreds = await areRedDays(nDaysToDisplay - 1);
 
+            // today
             const todayColor: TempoColor = await retrieveTodayColor();
             let nextDaysColors = [todayColor];
-            let nextProbabilities = [todayColor === TempoColor.RED ? 1.0 : 0.0];
+            let nextProbabilities = [1.0]; // today is always certain
 
+            // next days
             for (let i = 0; i < nextDaysAreRedPreds.length; i++) {
                 const nextDayColor: TempoColor = nextDaysAreRedPreds[i].label ? TempoColor.RED : TempoColor.BLUE_OR_WHITE;
                 nextDaysColors.push(nextDayColor);
                 nextProbabilities.push(nextDaysAreRedPreds[i].probability);
             }
-
+            
+            // tomorrow case: if tomorrow is known, override the first prediction
             const tomorrowColor: TempoColor = await retrieveTomorrowColor();
             if (tomorrowColor !== TempoColor.UNKNOWN) {
                 nextDaysColors[1] = tomorrowColor;
+                nextProbabilities[1] = 1.0;
             }
             setRedDays(nextDaysColors);
             setProbabilities(nextProbabilities); 

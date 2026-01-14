@@ -112,14 +112,11 @@ export const areRedDays = async (nDaysToPredict: number): Promise<Prediction[]> 
         // array of probabilities for each class (0 and 1), flattened
         const probs = fetches[session.outputNames[1]].data;
         for (let i = 0; i < nDaysToPredict; i++) {
-            const label = labels[i];
-            const prob = probs[i * 2 + 1]; // probability of class 1 (red day)
-            if (typeof label !== 'bigint') {
-                throw new OnnxInferenceError("Output data is not a bigint.");
-            }
+            const label = Number(labels[i]);
+            const prob = probs[i * 2 +  label]; // probability of label class
 
             predictions.push({
-                label: Number(label) === 1,
+                label: label === 1,
                 probability: prob,
             });
             console.log(`Day ${i + 1}: label=${label}, prob=${prob}`);
