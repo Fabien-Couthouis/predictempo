@@ -2,7 +2,7 @@
   "expo": {
     "name": "predictempo-app",
     "slug": "predictempo-app",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/predictempo_icon_color.png",
     "scheme": "myapp",
