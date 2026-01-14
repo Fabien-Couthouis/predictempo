@@ -700,6 +700,22 @@ wheels = [
 ]
 
 [[package]]
+name = "onnxslim"
+version = "0.1.82"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama" },
+    { name = "ml-dtypes" },
+    { name = "onnx" },
+    { name = "packaging" },
+    { name = "sympy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8b/c6/cdc34ac3ef262cabb00b94d6f0cce763a9f6eab74f53adcf9a300ba3a3b0/onnxslim-0.1.82.tar.gz", hash = "sha256:4f48decf32863e583976fff6e9cfd9d6fe6a4a9814e7577c2cf8ce082973c6eb", size = 573786, upload-time = "2026-01-01T21:02:46.677Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ca/d0/30c48ea62e4e84f237cb570d3afec4d4b5dacc748e4eb02bf54a7d75f601/onnxslim-0.1.82-py3-none-any.whl", hash = "sha256:3190340f53c93620779f2159b41d114e571b7c1a0cfa8630cba3f7be92d3399e", size = 167255, upload-time = "2026-01-01T21:02:45.201Z" },
+]
+
+[[package]]
 name = "orjson"
 version = "3.11.5"
 source = { registry = "https://pypi.org/simple" }
@@ -894,6 +910,7 @@ dependencies = [
     { name = "numpy" },
     { name = "onnxmltools" },
     { name = "onnxruntime" },
+    { name = "onnxslim" },
     { name = "pandas" },
     { name = "pip" },
     { name = "plotly" },
@@ -915,6 +932,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.4.0" },
     { name = "onnxmltools", specifier = ">=1.14.0" },
     { name = "onnxruntime", specifier = ">=1.23.2" },
+    { name = "onnxslim", specifier = ">=0.1.82" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "pip", specifier = ">=25.3" },
     { name = "plotly", specifier = ">=6.5.0" },
